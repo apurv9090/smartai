@@ -131,6 +131,8 @@ export function Chat() {
         id: uuidv4()
       };
       setMessages(prev => [...prev, aiMessage]);
+      // Refresh chats to update title inferred from first message
+      refreshChats();
 
     } catch (error) {
       console.error('Error sending message:', error);
