@@ -98,6 +98,10 @@ class AIService {
           ? history
               .filter(h => h && h.role && h.content)
               .slice(-40)
+              .map(h => ({
+                role: h.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: String(h.content) }]
+              }))
           : [];
         const chat = modelInstance.startChat({
           history: normalizedHistory,

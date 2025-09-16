@@ -190,10 +190,13 @@ router.post('/:chatId/message', [
     });
 
     // Build conversation history for context (limit last 20 messages)
+    // Get last 40 messages ordered by createdAt asc for context
     const historyDocs = await Message.find({ chatId })
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .select('role content createdAt')
-      .limit(40);
+      .limit(40)
+      .lean();
+    historyDocs.reverse();
     const history = historyDocs.map(m => ({ role: m.role, content: m.content }));
 
     // Get AI response with history
