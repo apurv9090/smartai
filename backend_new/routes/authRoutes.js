@@ -13,6 +13,17 @@ const generateToken = (id) => {
   });
 };
 
+// Helper to set auth cookie
+const setAuthCookie = (res, token) => {
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+};
+
 // @route   POST /api/auth/register
 // @desc    Register user
 // @access  Public
@@ -57,8 +68,11 @@ router.post('/register', [
       password
     });
 
-    // Generate token
-    const token = generateToken(user._id);
+  // Generate token
+  const token = generateToken(user._id);
+
+    // Set cookie and also return token for existing frontend compatibility
+    setAuthCookie(res, token);
 
     // Return shape expected by frontend AuthContext (top-level user/token + success)
     res.status(201).json({
@@ -132,6 +146,9 @@ router.post('/login', [
     // Generate token
     const token = generateToken(user._id);
 
+    // Set cookie and also return token for existing frontend compatibility
+    setAuthCookie(res, token);
+
     // Return shape expected by frontend AuthContext (top-level user/token + success)
     res.json({
       success: true,
@@ -174,6 +191,18 @@ router.get('/me', protect, async (req, res) => {
       error: 'Server error getting profile'
     });
   }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Logout user (clear cookie)
+// @access  Public
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  });
+  res.json({ success: true, message: 'Logged out' });
 });
 
 module.exports = router;

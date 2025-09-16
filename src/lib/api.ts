@@ -196,10 +196,10 @@ export class ApiClient {
     });
   }
 
-  async register(username: string, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+  async register(name: string, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
     return this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ name, email, password }),
     });
   }
 
@@ -228,6 +228,19 @@ export class ApiClient {
 
   async getChat(chatId: string): Promise<ApiResponse<ChatWithMessages>> {
     return this.request<ChatWithMessages>(`/api/chat/${chatId}`);
+  }
+
+  async deleteChat(chatId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/api/chat/${chatId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateChatTitle(chatId: string, title: string): Promise<ApiResponse<{ chat: Chat }>> {
+    return this.request<{ chat: Chat }>(`/api/chat/${chatId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title }),
+    });
   }
 
   // Health check endpoint

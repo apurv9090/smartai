@@ -8,13 +8,14 @@ import { Header } from "@/components/custom/header";
 import { v4 as uuidv4 } from 'uuid';
 import { api, isError } from "@/lib/api";
 import { toast } from "sonner";
+import { useChat } from '@/context/ChatContext';
 
 export function Chat() {
   const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>();
   const [messages, setMessages] = useState<message[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [currentChatId, setCurrentChatId] = useState<string | undefined>(undefined);
+  const { currentChatId, selectChat, refreshChats } = useChat();
   const [_error, setError] = useState<string | null>(null);
   const [_aiStatus, setAiStatus] = useState<{available: boolean; fallbackMode?: boolean}>({available: true});
 
@@ -57,6 +58,28 @@ export function Chat() {
     checkAiStatus();
   }, []);
 
+  // Load messages when switching chats
+  useEffect(() => {
+    const load = async () => {
+      if (!currentChatId) {
+        setMessages([]);
+        return;
+      }
+      const res = await api.getChat(currentChatId);
+      if (res.success && res.data) {
+        const msgs = res.data.messages.map((m) => ({
+          id: m._id,
+          role: m.role,
+          content: m.content,
+        })) as message[];
+        setMessages(msgs);
+      } else {
+        toast.error('Failed to load chat');
+      }
+    };
+    load();
+  }, [currentChatId]);
+
   async function handleSubmit(text?: string) {
     if (isLoading) return;
 
@@ -79,19 +102,21 @@ export function Chat() {
       setQuestion("");
 
       // If no current chat, create one first
-      let chatId = currentChatId;
+      let chatId = currentChatId || null;
       if (!chatId) {
-        const createResponse = await api.createChat(`Chat ${new Date().toLocaleString()}`);
+        const createResponse = await api.createChat('New Chat');
         if (createResponse.success && createResponse.data) {
           chatId = createResponse.data.chat._id;
-          setCurrentChatId(chatId);
+          selectChat(chatId);
+          // Refresh list to show new chat
+          refreshChats();
         } else {
           throw new Error(createResponse.error || 'Failed to create chat');
         }
       }
 
       // Send message to backend
-      const response = await api.sendMessage(messageText, chatId);
+  const response = await api.sendMessage(messageText, chatId as string);
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to get response');

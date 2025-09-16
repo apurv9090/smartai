@@ -4,6 +4,7 @@ import { LoginPage } from './pages/auth/login'
 import { RegisterPage } from './pages/auth/register'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext'
+import { ChatProvider } from './context/ChatContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 // Protected route component
@@ -35,6 +36,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <ChatProvider>
         <Router 
           future={{ 
             v7_startTransition: true, 
@@ -45,6 +47,7 @@ function App() {
             <AppRoutes />
           </div>
         </Router>
+        </ChatProvider>
       </ThemeProvider>
     </AuthProvider>
   )

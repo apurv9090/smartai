@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MessageCircle, X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useChat } from '@/context/ChatContext';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,34 +13,37 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, onDeleteChat }: SidebarProps) {
-  const [chats, setChats] = useState<{ id: string; name: string; active: boolean }[]>([]);
-  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const { chats, currentChatId, selectChat, startNewChat, deleteChat, refreshChats } = useChat();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Ensure chats are loaded when sidebar opens
+    if (isOpen) refreshChats();
+  }, [isOpen]);
 
   const createNewChat = () => {
-    const newChat = {
-      id: Date.now().toString(),
-      name: `Chat ${chats.length + 1}`,
-      active: false,
-    };
-    setChats([...chats, newChat]);
+    startNewChat();
+    toast.success('New chat started');
   };
 
-  const selectChat = (chatId: string) => {
-    setActiveChat(chatId);
-    setChats(chats.map(chat => ({
-      ...chat,
-      active: chat.id === chatId,
-    })));
+  const onSelectChat = (chatId: string) => {
+    selectChat(chatId);
+    onClose();
   };
 
-  const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
+  const handleDeleteChat = async (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (onDeleteChat) {
-      onDeleteChat(chatId);
-      setChats(chats.filter(chat => chat.id !== chatId));
-      if (activeChat === chatId) {
-        setActiveChat(null);
+    try {
+      setBusy(chatId);
+      const ok = await deleteChat(chatId);
+      if (ok) {
+        toast.success('Chat deleted');
+        onDeleteChat?.(chatId);
+      } else {
+        toast.error('Failed to delete chat');
       }
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -70,22 +75,23 @@ export function Sidebar({ isOpen, onClose, onDeleteChat }: SidebarProps) {
           <div className="space-y-2">
             {chats.map((chat) => (
               <div
-                key={chat.id}
+                key={chat._id}
                 className="group relative"
               >
                 <Button
-                  variant={chat.active ? "secondary" : "ghost"}
+                  variant={currentChatId === chat._id ? "secondary" : "ghost"}
                   className="w-full justify-start gap-2 pr-8"
-                  onClick={() => selectChat(chat.id)}
+                  onClick={() => onSelectChat(chat._id)}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {chat.name}
+                  {chat.title}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => handleDeleteChat(e, chat.id)}
+                  onClick={(e) => handleDeleteChat(e, chat._id)}
+                  disabled={busy === chat._id}
                 >
                   <Trash2 className="h-4 w-4 text-primary" />
                 </Button>

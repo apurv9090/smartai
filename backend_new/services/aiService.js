@@ -83,7 +83,7 @@ class AIService {
     }
   }
 
-  async generateResponse(message) {
+  async generateResponse(message, history = []) {
     try {
       if (!this.isConfigured || !this.model) {
         return {
@@ -94,8 +94,13 @@ class AIService {
       }
 
       const execGenerate = async (modelInstance, modelName) => {
+        const normalizedHistory = Array.isArray(history)
+          ? history
+              .filter(h => h && h.role && h.content)
+              .slice(-40)
+          : [];
         const chat = modelInstance.startChat({
-          history: [],
+          history: normalizedHistory,
           generationConfig: {
             temperature: 0.7,
             topP: 0.95,

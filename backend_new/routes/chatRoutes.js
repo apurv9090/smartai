@@ -14,6 +14,7 @@ router.use(protect);
 // @access  Private
 router.post('/', [
   body('title')
+    .optional()
     .trim()
     .isLength({ min: 1, max: 200 })
     .withMessage('Title must be between 1 and 200 characters')
@@ -34,7 +35,7 @@ router.post('/', [
     // Create chat
     const chat = await Chat.create({
       userId,
-      title
+      title: title && title.trim().length > 0 ? title.trim() : 'New Chat'
     });
 
     res.status(201).json({
@@ -172,6 +173,13 @@ router.post('/:chatId/message', [
       });
     }
 
+    // If chat has default title, set it from first user message topic
+    if (chat.title === 'New Chat' && chat.messageCount === 0) {
+      const inferred = message.split('\n')[0].trim().slice(0, 60);
+      chat.title = inferred.length > 0 ? inferred : 'New Chat';
+      await chat.save();
+    }
+
     // Save user message
     const userMessage = await Message.create({
       chatId,
@@ -181,14 +189,21 @@ router.post('/:chatId/message', [
       tokens: Math.ceil(message.length / 4) // Rough token estimation
     });
 
-    // Get AI response (we'll implement this in the AI service)
+    // Build conversation history for context (limit last 20 messages)
+    const historyDocs = await Message.find({ chatId })
+      .sort({ createdAt: 1 })
+      .select('role content createdAt')
+      .limit(40);
+    const history = historyDocs.map(m => ({ role: m.role, content: m.content }));
+
+    // Get AI response with history
     let aiResponse = 'I apologize, but I\'m currently unable to generate a response. Please try again later.';
     let aiTokens = 0;
 
     try {
       // Import AI service dynamically to avoid circular dependencies
       const aiService = require('../services/aiService');
-      const aiResult = await aiService.generateResponse(message);
+      const aiResult = await aiService.generateResponse(message, history);
 
       if (aiResult.success) {
         aiResponse = aiResult.response;
@@ -246,6 +261,74 @@ router.post('/:chatId/message', [
       success: false,
       error: 'Server error sending message'
     });
+  }
+});
+
+// @route   DELETE /api/chat/:chatId
+// @desc    Soft delete a chat and its messages
+// @access  Private
+router.delete('/:chatId', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user._id;
+
+    const chat = await Chat.findOne({ _id: chatId, userId, isActive: true });
+    if (!chat) {
+      return res.status(404).json({ success: false, error: 'Chat not found' });
+    }
+
+    chat.isActive = false;
+    await chat.save();
+
+    // Optionally also delete messages (hard delete) or keep for audit; here we keep but could clean:
+    // await Message.deleteMany({ chatId });
+
+    res.json({ success: true, message: 'Chat deleted' });
+  } catch (error) {
+    console.error('Delete chat error:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, error: 'Invalid chat ID' });
+    }
+    res.status(500).json({ success: false, error: 'Server error deleting chat' });
+  }
+});
+
+// @route   PUT /api/chat/:chatId
+// @desc    Update chat title
+// @access  Private
+router.put('/:chatId', [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Title must be between 1 and 200 characters')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { chatId } = req.params;
+    const { title } = req.body;
+    const userId = req.user._id;
+
+    const chat = await Chat.findOneAndUpdate(
+      { _id: chatId, userId, isActive: true },
+      { title: title.trim() },
+      { new: true }
+    ).select('-__v');
+
+    if (!chat) {
+      return res.status(404).json({ success: false, error: 'Chat not found' });
+    }
+
+    res.json({ success: true, chat });
+  } catch (error) {
+    console.error('Update chat error:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, error: 'Invalid chat ID' });
+    }
+    res.status(500).json({ success: false, error: 'Server error updating chat' });
   }
 });
 
