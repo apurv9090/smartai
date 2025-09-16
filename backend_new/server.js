@@ -1,7 +1,35 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
+let cookieParser;
+try {
+  cookieParser = require('cookie-parser');
+} catch (e) {
+  // Minimal fallback cookie parser if dependency not installed
+  console.warn('⚠️  cookie-parser not installed; using a simple fallback parser');
+  cookieParser = function fallbackCookieParser() {
+    return function (req, _res, next) {
+      try {
+        const header = req.headers?.cookie || '';
+        const obj = {};
+        if (header) {
+          header.split(';').forEach((pair) => {
+            const idx = pair.indexOf('=');
+            if (idx > -1) {
+              const key = decodeURIComponent(pair.slice(0, idx).trim());
+              const val = decodeURIComponent(pair.slice(idx + 1).trim());
+              obj[key] = val;
+            }
+          });
+        }
+        req.cookies = obj;
+      } catch (_err) {
+        req.cookies = {};
+      }
+      next();
+    };
+  };
+}
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
