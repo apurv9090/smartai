@@ -57,9 +57,15 @@ router.post('/register', [
     }
 
     const { name, email, password } = req.body;
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Auth/Register attempt:', { email });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Auth/Register existingUser:', existingUser ? { id: existingUser._id, email: existingUser.email } : null);
+    }
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -91,9 +97,10 @@ router.post('/register', [
       token
     });
   } catch (error) {
-    console.error('Registration error:', error);
+  console.error('Registration error:', error && error.keyValue ? { message: error.message, keyValue: error.keyValue } : error);
     if (error && error.code === 11000) {
-      return res.status(400).json({ success: false, error: 'User already exists with this email' });
+      const field = error.keyValue ? Object.keys(error.keyValue)[0] : 'field';
+      return res.status(400).json({ success: false, error: `${field} already exists` });
     }
     res.status(error.statusCode || 500).json({
       success: false,

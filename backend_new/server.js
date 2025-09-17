@@ -32,7 +32,13 @@ try {
 }
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
+// Load env from backend_new/.env; if some values are missing, also try project root .env
 require('dotenv').config();
+if (!process.env.MONGODB_URI || !process.env.JWT_SECRET || !process.env.FRONTEND_URL) {
+  const rootEnvPath = path.resolve(__dirname, '..', '.env');
+  require('dotenv').config({ path: rootEnvPath });
+}
 
 const authRoutes = require('./routes/authRoutes');
 const chatRoutes = require('./routes/chatRoutes');
