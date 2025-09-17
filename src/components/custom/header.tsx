@@ -47,7 +47,7 @@ export function Header() {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
           </Button>
-          <h1 className="text-lg font-semibold">allthing</h1>
+          <h1 className="text-lg font-semibold">smartai</h1>
         </div>
         
   {/* Connection status indicator removed as requested */}

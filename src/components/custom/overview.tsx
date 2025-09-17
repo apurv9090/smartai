@@ -34,7 +34,7 @@ export const Overview = () => {
             marginBottom: "1rem"
           }}
         >
-          Welcome to allthing
+          Welcome to smartai
         </motion.h1>
       </div>
     </motion.div>
