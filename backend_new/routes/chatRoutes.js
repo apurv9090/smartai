@@ -199,6 +199,38 @@ router.post('/:chatId/message', [
     historyDocs.reverse();
     const history = historyDocs.map(m => ({ role: m.role, content: m.content }));
 
+    // If the user's message likely refers to previous content (e.g., "explain this code"),
+    // augment the prompt with the most recent code snippet from history to make intent explicit.
+    const needsContext = /\b(explain|what\s+does\s+this|describe|analyze|refactor|optimi[sz]e|add\s+comments)\b/i.test(message)
+      && /\b(this|that|it|code|snippet|program|above|previous)\b/i.test(message)
+      && message.length < 200;
+
+    let expandedMessage = message;
+    if (needsContext) {
+      // Find the last assistant/user message containing a fenced code block or code-looking lines
+      let snippet = '';
+      for (let i = historyDocs.length - 1; i >= 0; i--) {
+        const c = historyDocs[i]?.content || '';
+        // Prefer fenced code blocks
+        const fenceMatch = c.match(/```[\s\S]*?```/g);
+        if (fenceMatch && fenceMatch.length > 0) {
+          snippet = fenceMatch[fenceMatch.length - 1];
+          break;
+        }
+        // Fallback: detect multiple lines with semicolons/braces typical of code
+        const lines = c.split('\n');
+        const codeLike = lines.filter(l => /;|\{|\}|class\s+|public\s+|static\s+|void\s+main\s*\(/i.test(l)).slice(0, 20);
+        if (codeLike.length >= 3) {
+          snippet = codeLike.join('\n');
+          break;
+        }
+      }
+      if (snippet) {
+        // Keep the prompt concise, add explicit instruction tying to previous code
+        expandedMessage = `${message}\n\nUse the following previous code from this chat as the reference:\n\n${snippet}`;
+      }
+    }
+
     // Get AI response with history
     let aiResponse = 'I apologize, but I\'m currently unable to generate a response. Please try again later.';
     let aiTokens = 0;
@@ -206,7 +238,7 @@ router.post('/:chatId/message', [
     try {
       // Import AI service dynamically to avoid circular dependencies
       const aiService = require('../services/aiService');
-      const aiResult = await aiService.generateResponse(message, history);
+      const aiResult = await aiService.generateResponse(expandedMessage, history);
 
       if (aiResult.success) {
         aiResponse = aiResult.response;
