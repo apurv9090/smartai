@@ -76,7 +76,7 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
         <ScrollArea className="flex-1">
           <div className="space-y-2">
             {chats.map((chat) => (
-              <div key={chat._id} className="relative">
+              <div key={chat._id} className="group relative">
                 <Button
                   variant={currentChatId === chat._id ? "secondary" : "ghost"}
                   className="w-full justify-start gap-2 pr-12"
@@ -87,17 +87,25 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
                     {chat.title}
                   </span>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 transition-opacity opacity-100 hover:bg-accent"
-                  onClick={(e) => handleDeleteChat(e, chat._id)}
-                  disabled={busy === chat._id}
-                  aria-label={`Delete chat ${chat.title}`}
-                  title="Delete chat"
-                >
-                  <Trash2 className="h-4 w-4 text-primary" />
-                </Button>
+                {/* Hover zone on the right to reveal delete */}
+                <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "transition-opacity pointer-events-auto",
+                      currentChatId === chat._id
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    )}
+                    onClick={(e) => handleDeleteChat(e, chat._id)}
+                    disabled={busy === chat._id}
+                    aria-label={`Delete chat ${chat.title}`}
+                    title="Delete chat"
+                  >
+                    <Trash2 className="h-4 w-4 text-primary" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
