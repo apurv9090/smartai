@@ -10,7 +10,7 @@ export function RegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <h1 className="text-4xl font-bold text-center mb-8">allthing</h1>
+  <h1 className="text-4xl font-bold text-center mb-8">smartai</h1>
         <AuthForm type="register" />
       </motion.div>
     </div>
