@@ -80,6 +80,8 @@ export function Chat() {
     load();
   }, [currentChatId]);
 
+  // (Messages are cleared automatically when currentChatId is null)
+
   async function handleSubmit(text?: string) {
     if (isLoading) return;
 
@@ -101,15 +103,15 @@ export function Chat() {
       // Clear input
       setQuestion("");
 
-      // If no current chat, create one first
+      // If no current chat, create one first. IMPORTANT: do not select the chat yet.
+      // Selecting immediately triggers a messages reload effect that can overwrite
+      // our optimistic first user message before it's saved on the server.
       let chatId = currentChatId || null;
       if (!chatId) {
         const createResponse = await api.createChat('New Chat');
         if (createResponse.success && createResponse.data) {
           chatId = createResponse.data.chat._id;
-          selectChat(chatId);
-          // Refresh list to show new chat
-          refreshChats();
+          // Defer selectChat/refreshChats until after sendMessage completes
         } else {
           throw new Error(createResponse.error || 'Failed to create chat');
         }
@@ -131,8 +133,12 @@ export function Chat() {
         id: uuidv4()
       };
       setMessages(prev => [...prev, aiMessage]);
-      // Refresh chats to update title inferred from first message
-      refreshChats();
+      // Now that the first round-trip is complete, select the chat (if it was just created)
+      // and refresh chats to update title inferred from first message.
+      if (!currentChatId && chatId) {
+        selectChat(chatId);
+      }
+      await refreshChats();
 
     } catch (error) {
       console.error('Error sending message:', error);

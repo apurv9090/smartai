@@ -10,9 +10,10 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onDeleteChat?: (chatId: string) => void;
+  onStartNewChat?: () => void; // notify chat page to clear local state
 }
 
-export function Sidebar({ isOpen, onClose, onDeleteChat }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: SidebarProps) {
   const { chats, currentChatId, selectChat, startNewChat, deleteChat, refreshChats } = useChat();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -23,6 +24,7 @@ export function Sidebar({ isOpen, onClose, onDeleteChat }: SidebarProps) {
 
   const createNewChat = () => {
     startNewChat();
+    onStartNewChat?.();
     toast.success('New chat started');
   };
 
