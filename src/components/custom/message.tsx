@@ -63,17 +63,21 @@ export const ThinkingMessage = () => {
     >
       <div
         className={cx(
-          'flex gap-3 w-full rounded-2xl group-data-[role=assistant]/message:bg-background group-data-[role=assistant]/message:border group-data-[role=assistant]/message:border-border group-data-[role=assistant]/message:px-4 group-data-[role=assistant]/message:py-3 group-data-[role=assistant]/message:w-fit group-data-[role=assistant]/message:max-w-3xl group-data-[role=assistant]/message:ml-1 md:group-data-[role=assistant]/message:ml-2 transition-shadow hover:shadow-sm'
+          // Keep layout, but ensure loading bubble is minimal and clean
+          'flex items-center gap-2 w-full rounded-2xl group-data-[role=assistant]/message:w-fit group-data-[role=assistant]/message:max-w-3xl group-data-[role=assistant]/message:ml-1 md:group-data-[role=assistant]/message:ml-2'
         )}
       >
-        <div className="relative size-8 mt-0.5 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-muted/60">
-          <SparklesIcon size={14} />
-          {/* loading dots animation next to the icon */}
-          <div className="absolute -right-10 flex items-center gap-1 text-muted-foreground">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.2s]"></span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.1s]"></span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce"></span>
-          </div>
+        {/* Agent icon without background box */}
+        <div className="mt-0.5 shrink-0 flex items-center justify-center">
+          <span className="text-muted-foreground opacity-80">
+            <SparklesIcon size={16} />
+          </span>
+        </div>
+        {/* Typing dots next to icon */}
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.2s]"></span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.1s]"></span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-bounce"></span>
         </div>
       </div>
     </motion.div>
