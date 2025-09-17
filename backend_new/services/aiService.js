@@ -96,7 +96,7 @@ class AIService {
       const execGenerate = async (modelInstance, modelName) => {
         const normalizedHistory = Array.isArray(history)
           ? history
-              .filter(h => h && h.role && h.content)
+              .filter(h => h && h.role && h.content && h.role !== 'system')
               .slice(-40)
               .map(h => ({
                 role: h.role === 'assistant' ? 'model' : 'user',

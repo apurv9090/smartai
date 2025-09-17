@@ -189,9 +189,9 @@ router.post('/:chatId/message', [
       tokens: Math.ceil(message.length / 4) // Rough token estimation
     });
 
-    // Build conversation history for context (limit last 20 messages)
+    // Build conversation history for context (exclude the message we just saved)
     // Get last 40 messages ordered by createdAt asc for context
-    const historyDocs = await Message.find({ chatId })
+    const historyDocs = await Message.find({ chatId, _id: { $ne: userMessage._id } })
       .sort({ createdAt: -1 })
       .select('role content createdAt')
       .limit(40)
