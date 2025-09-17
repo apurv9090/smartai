@@ -85,6 +85,23 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smartai',
 })
 .then(() => {
   console.log('✅ Connected to MongoDB');
+  // Drop legacy username unique index if present to avoid E11000 on username: null
+  (async () => {
+    try {
+      const db = mongoose.connection.db;
+      const collection = db.collection('users');
+      const indexes = await collection.indexes();
+      const legacy = indexes.filter(ix => ix.key && Object.prototype.hasOwnProperty.call(ix.key, 'username'));
+      if (legacy.length > 0) {
+        for (const ix of legacy) {
+          await collection.dropIndex(ix.name);
+          console.log(`🧹 Dropped legacy index '${ix.name}' on users:`, ix.key);
+        }
+      }
+    } catch (idxErr) {
+      console.warn('Index cleanup warning:', idxErr?.message || idxErr);
+    }
+  })();
 })
 .catch((error) => {
   console.error('❌ MongoDB connection error:', error);
