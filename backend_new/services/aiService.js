@@ -25,6 +25,7 @@ class AIService {
       this.genAI = new GoogleGenerativeAI(apiKey);
       this.model = this.genAI.getGenerativeModel({
         model: this.primaryModelName,
+        systemInstruction: 'You are a helpful coding assistant. Always use prior messages in this chat as context. If the user asks to explain code without pasting it again, refer to the previously shared code in the conversation and provide a clear, step-by-step explanation.',
         generationConfig: {
           temperature: 0.7,
           topP: 0.95,
@@ -35,6 +36,7 @@ class AIService {
       // Prepare a lighter fallback model for overload scenarios
       this.fallbackModel = this.genAI.getGenerativeModel({
         model: this.fallbackModelName,
+        systemInstruction: 'You are a helpful coding assistant. Always use prior messages in this chat as context. If the user asks to explain code without pasting it again, refer to the previously shared code in the conversation and provide a clear, step-by-step explanation.',
         generationConfig: {
           temperature: 0.7,
           topP: 0.95,
