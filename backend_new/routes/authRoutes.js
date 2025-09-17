@@ -40,7 +40,7 @@ router.post('/register', [
     .withMessage('Name must be between 2 and 50 characters'),
   body('email')
     .isEmail()
-    .normalizeEmail()
+    .customSanitizer((v) => String(v).trim().toLowerCase())
     .withMessage('Please provide a valid email'),
   body('password')
     .isLength({ min: 6 })
@@ -108,7 +108,7 @@ router.post('/register', [
 router.post('/login', [
   body('email')
     .isEmail()
-    .normalizeEmail()
+    .customSanitizer((v) => String(v).trim().toLowerCase())
     .withMessage('Please provide a valid email'),
   body('password')
     .notEmpty()
