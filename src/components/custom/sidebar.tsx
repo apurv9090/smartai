@@ -76,24 +76,25 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
         <ScrollArea className="flex-1">
           <div className="space-y-2">
             {chats.map((chat) => (
-              <div
-                key={chat._id}
-                className="group relative"
-              >
+              <div key={chat._id} className="relative">
                 <Button
                   variant={currentChatId === chat._id ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-2 pr-8"
+                  className="w-full justify-start gap-2 pr-12"
                   onClick={() => onSelectChat(chat._id)}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {chat.title}
+                  <span className="truncate text-left">
+                    {chat.title}
+                  </span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 transition-opacity opacity-100 hover:bg-accent"
                   onClick={(e) => handleDeleteChat(e, chat._id)}
                   disabled={busy === chat._id}
+                  aria-label={`Delete chat ${chat.title}`}
+                  title="Delete chat"
                 >
                   <Trash2 className="h-4 w-4 text-primary" />
                 </Button>
