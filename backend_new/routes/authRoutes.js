@@ -8,7 +8,13 @@ const router = express.Router();
 
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    const err = new Error('JWT secret not configured');
+    err.statusCode = 500;
+    throw err;
+  }
+  return jwt.sign({ id }, secret, {
     expiresIn: process.env.JWT_EXPIRE || '7d'
   });
 };
@@ -86,9 +92,12 @@ router.post('/register', [
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
+    if (error && error.code === 11000) {
+      return res.status(400).json({ success: false, error: 'User already exists with this email' });
+    }
+    res.status(error.statusCode || 500).json({
       success: false,
-      error: 'Server error during registration'
+      error: error.message || 'Server error during registration'
     });
   }
 });
@@ -161,9 +170,9 @@ router.post('/login', [
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
+    res.status(error.statusCode || 500).json({
       success: false,
-      error: 'Server error during login'
+      error: error.message || 'Server error during login'
     });
   }
 });
