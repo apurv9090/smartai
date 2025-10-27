@@ -30,8 +30,25 @@ export interface UserProfile {
 }
 
 export interface AuthResponse {
-  user: UserProfile;
-  token: string;
+  user?: UserProfile;
+  token?: string;
+  otpRequired?: boolean;
+  message?: string;
+}
+
+export interface PasswordResetRequestResponse {
+  message: string;
+  target?: string;
+  expiresInMinutes?: number;
+}
+
+export interface PasswordResetVerifyResponse {
+  resetToken: string;
+  expiresInMinutes: number;
+}
+
+export interface PasswordResetCompleteResponse {
+  message: string;
 }
 
 export interface Chat {
@@ -200,6 +217,27 @@ export class ApiClient {
     return this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
+    });
+  }
+
+  async requestPasswordReset(email: string): Promise<ApiResponse<PasswordResetRequestResponse>> {
+    return this.request<PasswordResetRequestResponse>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async verifyPasswordResetOtp(email: string, otp: string): Promise<ApiResponse<PasswordResetVerifyResponse>> {
+    return this.request<PasswordResetVerifyResponse>('/api/auth/verify-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    });
+  }
+
+  async resetPassword(email: string, resetToken: string, password: string): Promise<ApiResponse<PasswordResetCompleteResponse>> {
+    return this.request<PasswordResetCompleteResponse>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, resetToken, password }),
     });
   }
 

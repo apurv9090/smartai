@@ -20,6 +20,8 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
   useEffect(() => {
     // Ensure chats are loaded when sidebar opens
     if (isOpen) refreshChats();
+    // We intentionally omit refreshChats to avoid reloading on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const createNewChat = () => {
@@ -76,10 +78,10 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
         <ScrollArea className="flex-1">
           <div className="space-y-2">
             {chats.map((chat) => (
-              <div key={chat._id} className="group relative">
+              <div key={chat._id} className="flex items-center gap-2">
                 <Button
                   variant={currentChatId === chat._id ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-2 pr-12"
+                  className="flex-1 justify-start gap-2"
                   onClick={() => onSelectChat(chat._id)}
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -87,25 +89,17 @@ export function Sidebar({ isOpen, onClose, onDeleteChat, onStartNewChat }: Sideb
                     {chat.title}
                   </span>
                 </Button>
-                {/* Hover zone on the right to reveal delete */}
-                <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "transition-opacity pointer-events-auto",
-                      currentChatId === chat._id
-                        ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100"
-                    )}
-                    onClick={(e) => handleDeleteChat(e, chat._id)}
-                    disabled={busy === chat._id}
-                    aria-label={`Delete chat ${chat.title}`}
-                    title="Delete chat"
-                  >
-                    <Trash2 className="h-4 w-4 text-primary" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={(e) => handleDeleteChat(e, chat._id)}
+                  disabled={busy === chat._id}
+                  aria-label={`Delete chat ${chat.title}`}
+                  title="Delete chat"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             ))}
           </div>

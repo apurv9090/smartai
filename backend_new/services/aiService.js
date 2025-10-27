@@ -7,7 +7,7 @@ class AIService {
   this.fallbackModel = null;
     this.isConfigured = false;
   this.primaryModelName = 'gemini-2.5-flash';
-  this.fallbackModelName = 'gemini-1.5-flash-8b';
+  this.fallbackModelName = 'gemini-2.5-pro';
 
     this.initialize();
   }

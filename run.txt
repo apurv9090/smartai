@@ -1,0 +1,25 @@
+first install mongodb: this is link(https://www.mongodb.com/try/download/community) scroll down and install with msi not zip and download that 
+			note:download->MongoDB Community Server Download
+
+second install:https://nodejs.org/en/download (Windows Installer (.msi))<-note this 
+
+
+
+AFTER INSTALLATION OF THIS TWO
+		|
+		|
+		|
+	       \ /
+	        |
+
+first open this  project with vs code 
+
+second open three terminal in vs code 
+
+first terminal:first enter this command -> cd backend_new
+		after this first command enter new command:-npm run dev
+		
+
+second terminal:open second and enter command -> npm run dev
+
+third terminal:open and enter command -> python gemini_server.py
