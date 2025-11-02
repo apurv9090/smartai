@@ -307,16 +307,15 @@ router.delete('/:chatId', async (req, res) => {
     const { chatId } = req.params;
     const userId = req.user._id;
 
-    const chat = await Chat.findOne({ _id: chatId, userId, isActive: true });
+    const chat = await Chat.findOne({ _id: chatId, userId });
     if (!chat) {
       return res.status(404).json({ success: false, error: 'Chat not found' });
     }
 
-    chat.isActive = false;
-    await chat.save();
-
-    // Optionally also delete messages (hard delete) or keep for audit; here we keep but could clean:
-    // await Message.deleteMany({ chatId });
+    await Promise.all([
+      Chat.deleteOne({ _id: chatId, userId }),
+      Message.deleteMany({ chatId })
+    ]);
 
     res.json({ success: true, message: 'Chat deleted' });
   } catch (error) {

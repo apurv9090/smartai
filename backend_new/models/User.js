@@ -29,6 +29,39 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  loginOtp: {
+    codeHash: {
+      type: String
+    },
+    expiresAt: {
+      type: Date
+    },
+    attemptCount: {
+      type: Number,
+      default: 0
+    },
+    lastRequestedAt: {
+      type: Date
+    }
+  },
+  passwordReset: {
+    otpHash: {
+      type: String
+    },
+    otpExpiresAt: {
+      type: Date
+    },
+    otpAttemptCount: {
+      type: Number,
+      default: 0
+    },
+    resetTokenHash: {
+      type: String
+    },
+    resetTokenExpiresAt: {
+      type: Date
+    }
   }
 }, {
   timestamps: true,
@@ -67,6 +100,12 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
   delete userObject.password;
+  if (userObject.loginOtp) {
+    delete userObject.loginOtp;
+  }
+  if (userObject.passwordReset) {
+    delete userObject.passwordReset;
+  }
   return userObject;
 };
 
